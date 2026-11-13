@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Administrator Console &amp; Database | Brandy</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -131,7 +133,7 @@
               (o) => `<tr>
                 <td><strong>${o.brandName || "—"}</strong></td>
                 <td>${o.userEmail || "—"}</td>
-                <td>${o.planId === "monthly_800" ? "$800/mo" : "$100/wk"}</td>
+                <td>$100/wk</td>
                 <td><code>${o.paypalTxId || "—"}</code></td>
                 <td><span class="badge ${o.status === "active" ? "badge-green" : "badge-amber"}">${o.status}</span></td>
                 <td>

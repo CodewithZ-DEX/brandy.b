@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brandy AI Chatbot | Brandy Digital Agency</title>
+  <meta name="description" content="Chat with Brandy Assistant powered by Google Gemini API. Ask about our $100/week plan, brand deals, short-form video hooks, and website growth." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" href="favicon.svg" />
+  <link rel="canonical" href="https://brandy-agency.vercel.app/chatbot.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .chat-shell {
+      max-width: 860px;
+      margin-inline: auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: min(680px, calc(100vh - 230px));
+      min-height: 460px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .chat-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-slate);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .chat-messages {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: #ffffff;
+    }
+    .chat-bubble {
+      max-width: 82%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14.5px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--blue-600);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      background: var(--bg-slate);
+      color: var(--ink-primary);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-composer {
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+      background: var(--bg-slate);
+      display: grid;
+      gap: 10px;
+    }
+    .chat-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chat-chip {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .chat-chip:hover {
+      border-color: var(--blue-600);
+      color: var(--blue-600);
+    }
+    .chat-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .chat-form .input {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main>
+    <section class="section-sm bg-subtle" style="border-bottom:1px solid var(--border)">
+      <div class="container">
+        <span class="eyebrow">Powered by Google Gemini API</span>
+        <h1>Brandy AI Chatbot</h1>
+        <p class="lead">Ask about our $100/week growth sprint, brainstorm short-form video hooks for your product, or get instant campaign ideas.</p>
+      </div>
+    </section>
+
+    <section class="section-sm">
+      <div class="container">
+        <div class="card chat-shell">
+          <div class="chat-topbar">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="status-pill"><span class="status-dot"></span> Brandy Assistant</span>
+              <span class="badge badge-blue">gemini-2.5-flash</span>
+            </div>
+            <button id="chat-clear-btn" class="btn btn-secondary btn-sm" type="button">Clear Chat</button>
+          </div>
+
+          <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
+
+          <div class="chat-composer">
+            <div class="chat-chips">
+              <button type="button" class="chat-chip" data-prompt="What is included in Brandy's $100/week plan?">What's in $100/week?</button>
+              <button type="button" class="chat-chip" data-prompt="Give me 3 short-form reel hooks for a wireless earphones brand deal.">Earphones reel hooks</button>
+              <button type="button" class="chat-chip" data-prompt="How should we promote a new smartphone camera in a 30-second video?">Cell phone promo</button>
+              <button type="button" class="chat-chip" data-prompt="Suggest an ASMR and lifestyle video concept for a chocolate brand.">Chocolate brand video</button>
+            </div>
+            <form id="chat-form" class="chat-form">
+              <input id="chat-input" class="input" type="text" required placeholder="Ask Brandy Assistant anything about your brand, content, or $100/week plan..." autocomplete="off" />
+              <button id="chat-send-btn" class="btn btn-primary" type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module">
+    import { renderShell } from "./components.js";
+
+    renderShell("chatbot.html");
+
+    const messagesEl = document.getElementById("chat-messages");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("chat-send-btn");
+    const clearBtn = document.getElementById("chat-clear-btn");
+
+    const INITIAL_MESSAGE = {
+      role: "assistant",
+      text: "Hey! I'm Brandy Assistant. Ask me about our $100/week Weekly Growth Sprint, short-form brand deal concepts (earphones, cell phones, chocolates & food), or how to get started.",
+    };
+
+    let history = [INITIAL_MESSAGE];
+
+    function renderMessages() {
+      messagesEl.innerHTML = history
+        .map(
+          (m) =>
+            `<div class="chat-bubble ${m.role === "user" ? "user" : "assistant"}">${escapeHtml(m.text)}</div>`
+        )
+        .join("");
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    async function sendMessage(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
+      history.push({ role: "user", text: trimmed });
+      renderMessages();
+      input.value = "";
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Thinking...";
+
+      const thinkingEl = document.createElement("div");
+      thinkingEl.className = "chat-bubble assistant";
+      thinkingEl.textContent = "Typing...";
+      messagesEl.appendChild(thinkingEl);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: history }),
+        });
+        const data = await res.json();
+        thinkingEl.remove();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Chatbot request failed");
+        }
+        history.push({ role: "assistant", text: data.reply });
+      } catch (err) {
+        thinkingEl.remove();
+        history.push({
+          role: "assistant",
+          text:
+            `Live Gemini replies require deploying on Vercel with GEMINI_API_KEY set in Environment Variables.\n\n` +
+            `(${err.message})\n\n` +
+            `Meanwhile, here's a quick answer: Brandy offers a flat $100/week Weekly Growth Sprint covering social management, short-form Reels/Shorts, and landing page CRO. Email creativepawan89@gmail.com or visit Pricing to start.`,
+        });
+      } finally {
+        renderMessages();
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+        input.focus();
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      sendMessage(input.value);
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        sendMessage(chip.dataset.prompt);
+      });
+    });
+
+    clearBtn.addEventListener("click", () => {
+      history = [INITIAL_MESSAGE];
+      renderMessages();
+    });
+
+    renderMessages();
+  </script>
+</body>
+</html>

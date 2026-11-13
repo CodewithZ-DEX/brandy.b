@@ -137,7 +137,7 @@ export async function loginAsAdmin(username, password) {
     }
   } catch (err) {
     if (err.message.includes("Invalid administrator")) throw err;
-    // Static local preview fallback when Netlify Functions aren't running locally
+    // Static local preview fallback when Vercel API routes aren't running locally
     const validUser = username === "admin" || username === ADMIN_EMAIL;
     if (validUser && password === "BrandyAdmin@2026") {
       const session = {

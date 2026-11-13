@@ -81,10 +81,9 @@ export function initCheckoutModal() {
 
   document.querySelectorAll("[data-select-plan]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const planId = btn.dataset.selectPlan;
-      const isMonthly = planId === "monthly_800";
-      planNameEl.textContent = isMonthly ? "Monthly Growth Retainer" : "Weekly Growth Sprint";
-      planPriceEl.textContent = isMonthly ? "$800 / month" : "$100 / week";
+      const planId = btn.dataset.selectPlan || "weekly_100";
+      planNameEl.textContent = "Weekly Growth Sprint";
+      planPriceEl.textContent = "$100 / week";
       planIdInput.value = planId;
       if (activeUser?.email && emailInput && !emailInput.value) {
         emailInput.value = activeUser.email;
@@ -104,8 +103,8 @@ export function initCheckoutModal() {
     submitBtn.disabled = true;
     submitBtn.textContent = "Recording Payment...";
 
-    const planId = planIdInput.value;
-    const amountUsd = planId === "monthly_800" ? 800 : 100;
+    const planId = "weekly_100";
+    const amountUsd = 100;
     const payload = {
       userId: activeUser?.uid || "guest",
       userEmail: emailInput.value.trim(),

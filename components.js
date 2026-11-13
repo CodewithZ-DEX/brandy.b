@@ -5,7 +5,7 @@ const NAV_ITEMS = [
   { href: "services.html", label: "Services" },
   { href: "work.html", label: "Proof of Work" },
   { href: "pricing.html", label: "Pricing" },
-  { href: "ai-studio.html", label: "AI Studio" },
+  { href: "chatbot.html", label: "Chatbot" },
   { href: "contact.html", label: "Contact" },
 ];
 
@@ -20,7 +20,6 @@ export function renderShell(activeHref) {
         <a href="index.html" class="brand-logo" aria-label="Brandy Home">
           <span class="brand-mark">B</span>
           <span>Brandy</span>
-          <span class="brand-domain">brandy.netlify</span>
         </a>
         <ul class="nav-links" id="primary-nav">
           ${NAV_ITEMS.map(
@@ -89,14 +88,14 @@ export function renderShell(activeHref) {
               <li><a href="services.html#social">Social & Short-Form Video</a></li>
               <li><a href="services.html#content">Blogs, Guides & Case Studies</a></li>
               <li><a href="services.html#web">Brand Websites & CRO</a></li>
-              <li><a href="ai-studio.html">Gemini AI Strategist</a></li>
+              <li><a href="chatbot.html">Brandy AI Chatbot</a></li>
             </ul>
           </div>
           <div>
             <div class="footer-title">Company</div>
             <ul class="footer-links">
               <li><a href="work.html">Proof of Work</a></li>
-              <li><a href="pricing.html">Pricing ($100/wk • $800/mo)</a></li>
+              <li><a href="pricing.html">Pricing ($100/wk)</a></li>
               <li><a href="contact.html">Contact Us</a></li>
             </ul>
           </div>
@@ -110,8 +109,8 @@ export function renderShell(activeHref) {
           </div>
         </div>
         <div class="footer-bottom">
-          <span>© ${new Date().getFullYear()} Brandy Digital Agency (brandy.netlify.app). All rights reserved.</span>
-          <span>Powered by Netlify, Firebase & Gemini AI</span>
+          <span>© ${new Date().getFullYear()} Brandy Digital Agency. All rights reserved.</span>
+          <span>Powered by Vercel, Firebase & Gemini AI</span>
         </div>
       </div>
     `;

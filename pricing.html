@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pricing &amp; QR Checkout | Brandy Digital Marketing Agency</title>
-  <meta name="description" content="Transparent pricing: $100/week Growth Sprint or $800/month Full-Stack Retainer. Instant PayPal QR code checkout." />
-  <link rel="canonical" href="https://brandy.netlify.app/pricing.html" />
+  <meta name="description" content="Transparent pricing: $100/week Weekly Growth Sprint. Instant PayPal QR code checkout." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" href="favicon.svg" />
+  <link rel="canonical" href="https://brandy-agency.vercel.app/pricing.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -18,14 +20,14 @@
     <section class="section-sm bg-subtle" style="border-bottom:1px solid var(--border)">
       <div class="container">
         <span class="eyebrow">Transparent Pricing</span>
-        <h1>Simple plans. Instant QR checkout.</h1>
-        <p class="lead">Start with a $100/week sprint or lock in full-stack monthly execution for $800/month. Pay securely via PayPal QR code.</p>
+        <h1>One simple plan. Instant QR checkout.</h1>
+        <p class="lead">Start with our flat $100/week Growth Sprint—no long-term lock-in. Pay securely via PayPal QR code.</p>
       </div>
     </section>
 
     <section class="section">
-      <div class="container grid-2" style="max-width:940px;margin-inline:auto">
-        <article class="card pricing-card">
+      <div class="container" style="max-width:540px;margin-inline:auto">
+        <article class="card pricing-card featured">
           <div>
             <span class="badge badge-blue">Weekly Plan</span>
             <h2 style="margin-top:12px;font-size:1.6rem">Weekly Growth Sprint</h2>
@@ -39,34 +41,11 @@
               <li>2 short-form high-retention videos (Reels/Shorts/TikTok)</li>
               <li>2 branded posts or swipeable carousels</li>
               <li>1 landing page CRO audit &amp; conversion copy update</li>
-              <li>Client dashboard access &amp; Gemini AI Strategy Studio</li>
+              <li>Client dashboard access &amp; Brandy AI Chatbot</li>
             </ul>
           </div>
-          <button class="btn btn-secondary btn-lg" style="margin-top:28px;width:100%" data-select-plan="weekly_100">
+          <button class="btn btn-primary btn-lg" style="margin-top:28px;width:100%" data-select-plan="weekly_100">
             Pay $100/week via PayPal QR
-          </button>
-        </article>
-
-        <article class="card pricing-card featured">
-          <div>
-            <span class="badge badge-blue">Full-Stack Retainer</span>
-            <h2 style="margin-top:12px;font-size:1.6rem">Monthly Growth Retainer</h2>
-            <p>Complete outsourced marketing &amp; web department—social, content, influencers, and brand websites.</p>
-            <div class="price-row">
-              <span class="price-amount">$800</span>
-              <span class="price-period">/ month</span>
-            </div>
-            <ul class="check-list">
-              <li>Full daily management of all brand social accounts</li>
-              <li>8–12 short-form videos + weekly carousels &amp; posts</li>
-              <li>Influencer partnership outreach &amp; campaign management</li>
-              <li>SEO blog posts, buyer guides &amp; customer case studies</li>
-              <li>Custom brand website creation &amp; ongoing CRO testing</li>
-              <li>Priority support via creativepawan89@gmail.com</li>
-            </ul>
-          </div>
-          <button class="btn btn-primary btn-lg" style="margin-top:28px;width:100%" data-select-plan="monthly_800">
-            Pay $800/month via PayPal QR
           </button>
         </article>
       </div>
@@ -102,7 +81,7 @@
         2. Enter your PayPal Transaction ID below to activate your plan.
       </p>
       <form id="qr-checkout-form" class="form-grid">
-        <input type="hidden" id="checkout-plan-id" value="monthly_800" />
+        <input type="hidden" id="checkout-plan-id" value="weekly_100" />
         <div class="field">
           <label for="checkout-email">Your Email</label>
           <input id="checkout-email" class="input" type="email" required placeholder="you@company.com" />

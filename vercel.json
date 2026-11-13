@@ -5,6 +5,7 @@
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "*.css", "use": "@vercel/static" },
     { "src": "*.jpg", "use": "@vercel/static" },
+    { "src": "*.svg", "use": "@vercel/static" },
     { "src": "*.txt", "use": "@vercel/static" },
     { "src": "*.xml", "use": "@vercel/static" },
     { "src": "firebase-config.js", "use": "@vercel/static" },
@@ -24,7 +25,7 @@
       },
       "continue": true
     },
-    { "src": "/api/gemini-strategy", "dest": "/api-gemini-strategy.js" },
+    { "src": "/api/chat", "dest": "/api-chat.js" },
     { "src": "/api/admin-api", "dest": "/api-admin-api.js" },
     { "src": "/api/submit-inquiry", "dest": "/api-submit-inquiry.js" }
   ]

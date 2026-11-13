@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin.html
 Disallow: /dashboard.html
 
-Sitemap: https://brandy.netlify.app/sitemap.xml
+Sitemap: https://brandy-agency.vercel.app/sitemap.xml
