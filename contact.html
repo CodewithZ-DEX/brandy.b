@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us | Brandy Digital Marketing Agency</title>
+  <meta name="description" content="Contact Brandy Digital Agency at creativepawan89@gmail.com to launch your social media, content, or brand website project." />
+  <link rel="canonical" href="https://brandy.netlify.app/contact.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main>
+    <section class="section-sm bg-subtle" style="border-bottom:1px solid var(--border)">
+      <div class="container">
+        <span class="eyebrow">Contact Us</span>
+        <h1>Let's build your brand's growth engine.</h1>
+        <p class="lead">Reach out directly at <a href="mailto:creativepawan89@gmail.com" style="color:var(--blue-600);font-weight:700;text-decoration:underline">creativepawan89@gmail.com</a> or send a project brief below.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container grid-2" style="align-items:start;gap:40px">
+        <form id="contact-form" class="card form-grid">
+          <h2 style="font-size:1.35rem;margin-bottom:4px">Send a Project Inquiry</h2>
+          <div class="field">
+            <label for="c-name">Full Name</label>
+            <input id="c-name" class="input" required placeholder="Alex Morgan" />
+          </div>
+          <div class="field">
+            <label for="c-email">Work Email</label>
+            <input id="c-email" class="input" type="email" required placeholder="alex@brand.com" />
+          </div>
+          <div class="field">
+            <label for="c-company">Brand / Social Handle</label>
+            <input id="c-company" class="input" required placeholder="@yourbrand or website.com" />
+          </div>
+          <div class="field">
+            <label for="c-service">Primary Service Needed</label>
+            <select id="c-service" class="select">
+              <option value="Full-Stack Monthly ($800/mo)">Full-Stack Monthly Retainer ($800/mo)</option>
+              <option value="Weekly Growth Sprint ($100/wk)">Weekly Growth Sprint ($100/wk)</option>
+              <option value="Social Media & Short-Form Video">Social Media &amp; Short-Form Video</option>
+              <option value="Brand Website Creation & CRO">Brand Website Creation &amp; CRO</option>
+              <option value="Blogs, Guides & Case Studies">Blogs, Guides &amp; Case Studies</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="c-message">Project Goals &amp; Timeline</label>
+            <textarea id="c-message" class="textarea" required placeholder="Tell us about your brand, current channels, and what you want to achieve..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">Submit Inquiry</button>
+        </form>
+
+        <div style="display:grid;gap:20px">
+          <div class="card">
+            <h3>Direct Contact</h3>
+            <p>Prefer email? Message Pawan Kumar directly for custom retainers, influencer campaigns, or brand website builds.</p>
+            <a href="mailto:creativepawan89@gmail.com" class="btn btn-secondary" style="width:100%">Email creativepawan89@gmail.com</a>
+          </div>
+          <div class="card bg-subtle">
+            <h3>Quick PayPal QR Checkout</h3>
+            <p style="font-size:14px">Ready to start immediately on the $100/week Sprint or $800/month Retainer?</p>
+            <a href="pricing.html" class="btn btn-primary" style="width:100%">Go to Pricing &amp; QR Checkout →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module">
+    import { renderShell, showToast } from "./components.js";
+    import { createRecord } from "./db.js";
+    renderShell("contact.html");
+
+    const form = document.getElementById("contact-form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector("button[type='submit']");
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      const payload = {
+        name: document.getElementById("c-name").value.trim(),
+        email: document.getElementById("c-email").value.trim(),
+        company: document.getElementById("c-company").value.trim(),
+        service: document.getElementById("c-service").value,
+        message: document.getElementById("c-message").value.trim(),
+        status: "new",
+      };
+
+      try {
+        await createRecord("inquiries", payload);
+        fetch("/api/submit-inquiry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "inquiry", payload }),
+        }).catch(() => {});
+        showToast("Inquiry saved! We will reply to your email shortly.");
+        form.reset();
+      } catch (err) {
+        showToast("Failed to submit: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit Inquiry";
+      }
+    });
+  </script>
+</body>
+</html>

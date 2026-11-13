@@ -1,0 +1,14 @@
+{
+  "name": "brandy-agency",
+  "version": "1.0.0",
+  "description": "Brandy — Full-Stack Digital Marketing Agency Platform (Netlify + Firebase + Gemini AI)",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@google/genai": "^2.29.1",
+    "firebase-admin": "^13.0.0"
+  }
+}

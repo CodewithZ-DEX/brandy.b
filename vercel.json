@@ -1,0 +1,31 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "builds": [
+    { "src": "api-*.js", "use": "@vercel/node" },
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.css", "use": "@vercel/static" },
+    { "src": "*.jpg", "use": "@vercel/static" },
+    { "src": "*.txt", "use": "@vercel/static" },
+    { "src": "*.xml", "use": "@vercel/static" },
+    { "src": "firebase-config.js", "use": "@vercel/static" },
+    { "src": "auth.js", "use": "@vercel/static" },
+    { "src": "db.js", "use": "@vercel/static" },
+    { "src": "components.js", "use": "@vercel/static" },
+    { "src": "main.js", "use": "@vercel/static" }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+      },
+      "continue": true
+    },
+    { "src": "/api/gemini-strategy", "dest": "/api-gemini-strategy.js" },
+    { "src": "/api/admin-api", "dest": "/api-admin-api.js" },
+    { "src": "/api/submit-inquiry", "dest": "/api-submit-inquiry.js" }
+  ]
+}

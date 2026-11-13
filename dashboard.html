@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Dashboard | Brandy Digital Agency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="section bg-subtle">
+    <div class="container">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin-bottom:32px">
+        <div>
+          <span class="eyebrow">Client Workspace</span>
+          <h1 style="margin-bottom:4px">Welcome, <span id="user-name">Client</span></h1>
+          <p id="user-email" style="margin:0;font-size:14px"></p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <a href="pricing.html" class="btn btn-primary btn-sm">Upgrade / Pay QR</a>
+          <button id="logout-btn" class="btn btn-secondary btn-sm">Sign Out</button>
+        </div>
+      </div>
+
+      <div class="grid-2" style="align-items:start">
+        <form id="brief-form" class="card form-grid">
+          <h2 style="font-size:1.3rem;margin-bottom:4px">Submit Brand Campaign Brief</h2>
+          <div class="field">
+            <label for="b-brand">Brand / Account Name</label>
+            <input id="b-brand" class="input" required placeholder="Your Brand" />
+          </div>
+          <div class="field">
+            <label for="b-audience">Target Audience</label>
+            <input id="b-audience" class="input" required placeholder="Who are we targeting?" />
+          </div>
+          <div class="field">
+            <label for="b-goals">Deliverable Priorities</label>
+            <textarea id="b-goals" class="textarea" required placeholder="Short-form videos, carousels, blog posts, or website redesign..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Brand Brief</button>
+        </form>
+
+        <div style="display:grid;gap:24px">
+          <div class="card">
+            <h2 style="font-size:1.25rem">Your Payment Orders</h2>
+            <div id="orders-list" style="display:grid;gap:10px;font-size:14px">Loading...</div>
+          </div>
+          <div class="card">
+            <h2 style="font-size:1.25rem">Submitted Briefs</h2>
+            <div id="briefs-list" style="display:grid;gap:10px;font-size:14px">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module">
+    import { renderShell, showToast } from "./components.js";
+    import { subscribeAuth, logoutAll } from "./auth.js";
+    import { createRecord, listRecords } from "./db.js";
+
+    renderShell("dashboard.html");
+
+    let currentUser = null;
+    async function loadPortalData(uid) {
+      const [orders, briefs] = await Promise.all([
+        listRecords("orders", { userId: uid }),
+        listRecords("briefs", { userId: uid }),
+      ]);
+
+      document.getElementById("orders-list").innerHTML = orders.length
+        ? orders
+            .map(
+              (o) => `<div style="padding:12px;border:1px solid var(--border);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+                <div><strong>${o.planId === "monthly_800" ? "$800/mo" : "$100/wk"}</strong> • TX: ${o.paypalTxId}</div>
+                <span class="badge ${o.status === "active" ? "badge-green" : "badge-amber"}">${o.status}</span>
+              </div>`
+            )
+            .join("")
+        : `<p style="margin:0;color:var(--ink-muted)">No orders yet. <a href="pricing.html" style="color:var(--blue-600);text-decoration:underline">Choose a plan</a>.</p>`;
+
+      document.getElementById("briefs-list").innerHTML = briefs.length
+        ? briefs
+            .map(
+              (b) => `<div style="padding:12px;border:1px solid var(--border);border-radius:8px">
+                <strong>${b.brandName}</strong>
+                <div style="font-size:13px;color:var(--ink-secondary);margin-top:4px">${b.goals}</div>
+              </div>`
+            )
+            .join("")
+        : `<p style="margin:0;color:var(--ink-muted)">No briefs submitted yet.</p>`;
+    }
+
+    subscribeAuth((user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      document.getElementById("user-name").textContent = user.displayName || "Client";
+      document.getElementById("user-email").textContent = user.email || "";
+      loadPortalData(user.uid);
+    });
+
+    document.getElementById("brief-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+      await createRecord("briefs", {
+        userId: currentUser.uid,
+        brandName: document.getElementById("b-brand").value.trim(),
+        targetAudience: document.getElementById("b-audience").value.trim(),
+        goals: document.getElementById("b-goals").value.trim(),
+        status: "submitted",
+      });
+      showToast("Brief submitted!");
+      e.target.reset();
+      loadPortalData(currentUser.uid);
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await logoutAll();
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

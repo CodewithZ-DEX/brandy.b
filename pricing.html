@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing &amp; QR Checkout | Brandy Digital Marketing Agency</title>
+  <meta name="description" content="Transparent pricing: $100/week Growth Sprint or $800/month Full-Stack Retainer. Instant PayPal QR code checkout." />
+  <link rel="canonical" href="https://brandy.netlify.app/pricing.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main>
+    <section class="section-sm bg-subtle" style="border-bottom:1px solid var(--border)">
+      <div class="container">
+        <span class="eyebrow">Transparent Pricing</span>
+        <h1>Simple plans. Instant QR checkout.</h1>
+        <p class="lead">Start with a $100/week sprint or lock in full-stack monthly execution for $800/month. Pay securely via PayPal QR code.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container grid-2" style="max-width:940px;margin-inline:auto">
+        <article class="card pricing-card">
+          <div>
+            <span class="badge badge-blue">Weekly Plan</span>
+            <h2 style="margin-top:12px;font-size:1.6rem">Weekly Growth Sprint</h2>
+            <p>Best for rapid campaign launches, weekly social output, and immediate landing page improvements.</p>
+            <div class="price-row">
+              <span class="price-amount">$100</span>
+              <span class="price-period">/ week</span>
+            </div>
+            <ul class="check-list">
+              <li>Social media account management &amp; follower engagement</li>
+              <li>2 short-form high-retention videos (Reels/Shorts/TikTok)</li>
+              <li>2 branded posts or swipeable carousels</li>
+              <li>1 landing page CRO audit &amp; conversion copy update</li>
+              <li>Client dashboard access &amp; Gemini AI Strategy Studio</li>
+            </ul>
+          </div>
+          <button class="btn btn-secondary btn-lg" style="margin-top:28px;width:100%" data-select-plan="weekly_100">
+            Pay $100/week via PayPal QR
+          </button>
+        </article>
+
+        <article class="card pricing-card featured">
+          <div>
+            <span class="badge badge-blue">Full-Stack Retainer</span>
+            <h2 style="margin-top:12px;font-size:1.6rem">Monthly Growth Retainer</h2>
+            <p>Complete outsourced marketing &amp; web department—social, content, influencers, and brand websites.</p>
+            <div class="price-row">
+              <span class="price-amount">$800</span>
+              <span class="price-period">/ month</span>
+            </div>
+            <ul class="check-list">
+              <li>Full daily management of all brand social accounts</li>
+              <li>8–12 short-form videos + weekly carousels &amp; posts</li>
+              <li>Influencer partnership outreach &amp; campaign management</li>
+              <li>SEO blog posts, buyer guides &amp; customer case studies</li>
+              <li>Custom brand website creation &amp; ongoing CRO testing</li>
+              <li>Priority support via creativepawan89@gmail.com</li>
+            </ul>
+          </div>
+          <button class="btn btn-primary btn-lg" style="margin-top:28px;width:100%" data-select-plan="monthly_800">
+            Pay $800/month via PayPal QR
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-sm bg-subtle">
+      <div class="container" style="max-width:760px;text-align:center">
+        <h2>Direct PayPal QR Code</h2>
+        <p>Scan with your PayPal app to send payment to <strong>Pawan Kumar</strong>, then submit your transaction ID in checkout so we activate your portal immediately.</p>
+        <div class="qr-frame">
+          <img src="paypal-qr.jpg" alt="PayPal QR Code for Pawan Kumar — Brandy Digital Agency" loading="lazy" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <dialog id="qr-checkout-modal" class="modal" aria-labelledby="checkout-plan-name">
+    <div class="modal-head">
+      <div>
+        <strong id="checkout-plan-name">Plan Checkout</strong>
+        <div id="checkout-plan-price" style="font-size:13px;font-weight:700;color:var(--blue-600)"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-close-modal aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-frame" style="max-width:210px;margin-bottom:14px">
+        <img src="paypal-qr.jpg" alt="Scan PayPal QR Code to Pay Pawan Kumar" />
+      </div>
+      <p style="font-size:13px;text-align:center;margin-bottom:16px">
+        1. Scan the PayPal QR above (<strong>Pawan Kumar</strong>).<br />
+        2. Enter your PayPal Transaction ID below to activate your plan.
+      </p>
+      <form id="qr-checkout-form" class="form-grid">
+        <input type="hidden" id="checkout-plan-id" value="monthly_800" />
+        <div class="field">
+          <label for="checkout-email">Your Email</label>
+          <input id="checkout-email" class="input" type="email" required placeholder="you@company.com" />
+        </div>
+        <div class="field">
+          <label for="checkout-brand">Brand / Account Name</label>
+          <input id="checkout-brand" class="input" type="text" required placeholder="Acme Studio" />
+        </div>
+        <div class="field">
+          <label for="checkout-tx">PayPal Transaction / Reference ID</label>
+          <input id="checkout-tx" class="input" type="text" required placeholder="e.g. 9XK48201AB" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Confirm QR Payment</button>
+      </form>
+    </div>
+  </dialog>
+
+  <script type="module">
+    import { renderShell } from "./components.js";
+    import { initCheckoutModal } from "./main.js";
+    renderShell("pricing.html");
+    initCheckoutModal();
+
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+    if (plan) {
+      document.querySelector(`[data-select-plan="${plan}"]`)?.click();
+    }
+  </script>
+</body>
+</html>

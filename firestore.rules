@@ -1,0 +1,325 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {userId} (matches Firebase Auth UID)
+// Fields:
+//   - uid: string (required, immutable, must equal userId, 1..128 chars)
+//   - email: string (required, valid email, <= 254 chars)
+//   - displayName: string (required, 1..100 chars)
+//   - role: string (required, 'client' | 'admin'; non-admins can only create 'client' and cannot modify)
+//   - plan: string (required, 'none' | 'weekly_100' | 'monthly_800'; non-admins can only create 'none' and cannot modify)
+//   - createdAt: timestamp (required, immutable)
+//
+// Collection: orders
+// Document ID: {orderId}
+// Fields:
+//   - userId: string (required, immutable, must equal request.auth.uid on create, 1..128 chars)
+//   - userEmail: string (required, valid email, <= 254 chars)
+//   - planId: string (required, 'weekly_100' | 'monthly_800')
+//   - amountUsd: number (required, 100 for 'weekly_100' or 800 for 'monthly_800')
+//   - paypalTxId: string (required, 3..100 chars)
+//   - status: string (required, 'pending_verification' | 'active' | 'cancelled'; must be 'pending_verification' on create)
+//   - createdAt: timestamp (required, immutable)
+//
+// Collection: inquiries
+// Document ID: {inquiryId}
+// Fields:
+//   - name: string (required, 1..100 chars)
+//   - email: string (required, valid email, <= 254 chars)
+//   - company: string (optional, 0..150 chars)
+//   - service: string (required, 1..100 chars)
+//   - budget: string (required, 1..100 chars)
+//   - message: string (required, 1..5000 chars)
+//   - status: string (required, 'new' | 'in_progress' | 'contacted' | 'resolved' | 'archived'; must be 'new' on create)
+//   - createdAt: timestamp (required, immutable)
+//
+// Collection: portfolio
+// Document ID: {itemId}
+// Fields:
+//   - title: string (required, 1..150 chars)
+//   - category: string (required, 1..60 chars)
+//   - description: string (optional, 0..2000 chars)
+//   - mediaUrl: string (optional, valid http/https URL, <= 1000 chars)
+//   - thumbnailUrl: string (optional, valid http/https URL, <= 1000 chars)
+//   - caseStudyUrl: string (optional, valid http/https URL, <= 1000 chars)
+//   - clientName: string (optional, 0..100 chars)
+//   - metrics: string (optional, 0..300 chars)
+//   - tags: list (optional, <= 15 items)
+//   - featured: bool (optional)
+//   - order: number (optional)
+//   - createdAt: timestamp (required, immutable)
+//   - updatedAt: timestamp (optional)
+//
+// Collection: briefs
+// Document ID: {briefId}
+// Fields:
+//   - userId: string (required, immutable, must equal request.auth.uid on create, 1..128 chars)
+//   - brandName: string (required, 1..150 chars)
+//   - goals: string (required, 1..3000 chars)
+//   - targetAudience: string (required, 1..2000 chars)
+//   - assetsUrl: string (optional, empty or valid http/https URL, <= 1000 chars)
+//   - status: string (required, 'draft' | 'submitted' | 'in_review' | 'approved' | 'in_production' | 'completed')
+//   - createdAt: timestamp (required, immutable)
+//
+// Collection: ai_generations
+// Document ID: {genId}
+// Fields:
+//   - userId: string (required, immutable, must equal request.auth.uid on create, 1..128 chars)
+//   - prompt: string (required, 1..5000 chars)
+//   - output: string (required, 1..50000 chars)
+//   - createdAt: timestamp (required, immutable)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'creativepawan89@gmail.com' ||
+        request.auth.token.admin == true ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 254 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string &&
+        url.size() <= 1000 &&
+        (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalUrl(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == '' ||
+        isValidUrl(request.resource.data[field]);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data, userId) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'plan', 'createdAt']) &&
+        hasRequiredFields(['uid', 'email', 'displayName', 'role', 'plan', 'createdAt']) &&
+        data.uid is string && data.uid == userId && data.uid.size() > 0 && data.uid.size() <= 128 &&
+        isValidEmail(data.email) &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+        data.role in ['client', 'admin'] &&
+        data.plan in ['none', 'weekly_100', 'monthly_800'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return hasOnlyAllowedFields(['userId', 'userEmail', 'planId', 'amountUsd', 'paypalTxId', 'status', 'createdAt']) &&
+        hasRequiredFields(['userId', 'userEmail', 'planId', 'amountUsd', 'paypalTxId', 'status', 'createdAt']) &&
+        data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+        isValidEmail(data.userEmail) &&
+        data.planId in ['weekly_100', 'monthly_800'] &&
+        data.amountUsd is number &&
+        ((data.planId == 'weekly_100' && data.amountUsd == 100) ||
+         (data.planId == 'monthly_800' && data.amountUsd == 800)) &&
+        data.paypalTxId is string && data.paypalTxId.size() >= 3 && data.paypalTxId.size() <= 100 &&
+        data.status in ['pending_verification', 'active', 'cancelled'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidInquiry(data) {
+      return hasOnlyAllowedFields(['name', 'email', 'company', 'service', 'budget', 'message', 'status', 'createdAt']) &&
+        hasRequiredFields(['name', 'email', 'service', 'budget', 'message', 'status', 'createdAt']) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        isValidEmail(data.email) &&
+        isValidOptionalString('company', 0, 150) &&
+        data.service is string && data.service.size() >= 1 && data.service.size() <= 100 &&
+        data.budget is string && data.budget.size() >= 1 && data.budget.size() <= 100 &&
+        data.message is string && data.message.size() >= 1 && data.message.size() <= 5000 &&
+        data.status in ['new', 'in_progress', 'contacted', 'resolved', 'archived'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidPortfolioItem(data) {
+      return hasOnlyAllowedFields([
+          'title', 'category', 'description', 'mediaUrl', 'thumbnailUrl',
+          'caseStudyUrl', 'clientName', 'metrics', 'tags', 'featured',
+          'order', 'createdAt', 'updatedAt'
+        ]) &&
+        hasRequiredFields(['title', 'category', 'createdAt']) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
+        isValidOptionalString('description', 0, 2000) &&
+        isValidOptionalUrl('mediaUrl') &&
+        isValidOptionalUrl('thumbnailUrl') &&
+        isValidOptionalUrl('caseStudyUrl') &&
+        isValidOptionalString('clientName', 0, 100) &&
+        isValidOptionalString('metrics', 0, 300) &&
+        (!('tags' in data) || (data.tags is list && data.tags.size() <= 15)) &&
+        (!('featured' in data) || data.featured is bool) &&
+        (!('order' in data) || data.order is number) &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidBrief(data) {
+      return hasOnlyAllowedFields(['userId', 'brandName', 'goals', 'targetAudience', 'assetsUrl', 'status', 'createdAt']) &&
+        hasRequiredFields(['userId', 'brandName', 'goals', 'targetAudience', 'status', 'createdAt']) &&
+        data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+        data.brandName is string && data.brandName.size() >= 1 && data.brandName.size() <= 150 &&
+        data.goals is string && data.goals.size() >= 1 && data.goals.size() <= 3000 &&
+        data.targetAudience is string && data.targetAudience.size() >= 1 && data.targetAudience.size() <= 2000 &&
+        isValidOptionalUrl('assetsUrl') &&
+        data.status in ['draft', 'submitted', 'in_review', 'approved', 'in_production', 'completed'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAiGeneration(data) {
+      return hasOnlyAllowedFields(['userId', 'prompt', 'output', 'createdAt']) &&
+        hasRequiredFields(['userId', 'prompt', 'output', 'createdAt']) &&
+        data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+        data.prompt is string && data.prompt.size() >= 1 && data.prompt.size() <= 5000 &&
+        data.output is string && data.output.size() >= 1 && data.output.size() <= 50000 &&
+        data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Users: Owner can read/create/update (no role/plan self-escalation); Admins have full access
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() &&
+        isValidUser(request.resource.data, userId) &&
+        (
+          (isOwner(userId) &&
+           request.resource.data.role == 'client' &&
+           request.resource.data.plan == 'none') ||
+          isAdmin()
+        );
+      allow update: if isAuthenticated() &&
+        isValidUser(request.resource.data, userId) &&
+        areImmutableFieldsUnchanged(['uid', 'createdAt']) &&
+        (
+          (isOwner(userId) &&
+           request.resource.data.role == resource.data.role &&
+           request.resource.data.plan == resource.data.plan) ||
+          isAdmin()
+        );
+      allow delete: if isAdmin();
+    }
+
+    // Orders: Users can create pending orders for themselves and read their own; Admins have full access
+    match /orders/{orderId} {
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() &&
+        isValidOrder(request.resource.data) &&
+        (
+          (request.resource.data.userId == request.auth.uid &&
+           request.resource.data.status == 'pending_verification') ||
+          isAdmin()
+        );
+      allow update: if isAdmin() &&
+        isValidOrder(request.resource.data) &&
+        areImmutableFieldsUnchanged(['userId', 'createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // Inquiries: Publicly creatable with status 'new'; Admin-only read/update/delete
+    match /inquiries/{inquiryId} {
+      allow read: if isAdmin();
+      allow create: if isValidInquiry(request.resource.data) &&
+        request.resource.data.status == 'new';
+      allow update: if isAdmin() &&
+        isValidInquiry(request.resource.data) &&
+        areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // Portfolio: Publicly readable proof of work; Admin-only writes
+    match /portfolio/{itemId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidPortfolioItem(request.resource.data);
+      allow update: if isAdmin() &&
+        isValidPortfolioItem(request.resource.data) &&
+        areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // Briefs: Owners can create and read/update their own; Admins have full access
+    match /briefs/{briefId} {
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() &&
+        isValidBrief(request.resource.data) &&
+        (
+          (request.resource.data.userId == request.auth.uid &&
+           request.resource.data.status in ['draft', 'submitted']) ||
+          isAdmin()
+        );
+      allow update: if isAuthenticated() &&
+        isValidBrief(request.resource.data) &&
+        areImmutableFieldsUnchanged(['userId', 'createdAt']) &&
+        (
+          (resource.data.userId == request.auth.uid &&
+           (request.resource.data.status == resource.data.status ||
+            (resource.data.status == 'draft' && request.resource.data.status == 'submitted'))) ||
+          isAdmin()
+        );
+      allow delete: if isAdmin();
+    }
+
+    // AI Generations: Users can create and read their own; Admins can read/delete
+    match /ai_generations/{genId} {
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() &&
+        isValidAiGeneration(request.resource.data) &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Default deny for all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

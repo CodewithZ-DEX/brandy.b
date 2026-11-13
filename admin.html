@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Console &amp; Database | Brandy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="section bg-subtle">
+    <div class="container">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px">
+        <div>
+          <span class="eyebrow">Administrator Console</span>
+          <h1 style="margin-bottom:4px">Brandy Database &amp; Operations</h1>
+          <p id="db-mode-status" style="margin:0;font-size:14px"></p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button id="refresh-btn" class="btn btn-secondary btn-sm">Refresh Data</button>
+          <button id="export-btn" class="btn btn-secondary btn-sm">Export JSON Backup</button>
+          <button id="admin-logout-btn" class="btn btn-primary btn-sm">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Summary Metrics -->
+      <div class="grid-4" style="margin-bottom:28px">
+        <div class="card"><div class="metric-label">QR Orders</div><div class="metric-value" id="stat-orders">0</div></div>
+        <div class="card"><div class="metric-label">Contact Inquiries</div><div class="metric-value" id="stat-inquiries">0</div></div>
+        <div class="card"><div class="metric-label">Client Briefs</div><div class="metric-value" id="stat-briefs">0</div></div>
+        <div class="card"><div class="metric-label">Portfolio Items</div><div class="metric-value" id="stat-portfolio">0</div></div>
+      </div>
+
+      <!-- Orders Table -->
+      <section style="margin-bottom:32px">
+        <h2 style="font-size:1.3rem">PayPal QR Orders (Verify &amp; Activate)</h2>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Brand</th><th>Email</th><th>Plan</th><th>PayPal TX ID</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Inquiries Table -->
+      <section style="margin-bottom:32px">
+        <h2 style="font-size:1.3rem">Contact Inquiries</h2>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Service</th><th>Message</th><th>Action</th></tr>
+            </thead>
+            <tbody id="inquiries-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Add Portfolio Item + Database Explorer -->
+      <div class="grid-2" style="align-items:start">
+        <form id="portfolio-form" class="card form-grid">
+          <h2 style="font-size:1.25rem;margin-bottom:4px">Add Proof of Work Item</h2>
+          <div class="field">
+            <label for="p-title">Title</label>
+            <input id="p-title" class="input" required placeholder="e.g. 45s SaaS Product Reel" />
+          </div>
+          <div class="field">
+            <label for="p-client">Client Name</label>
+            <input id="p-client" class="input" required placeholder="Acme Inc." />
+          </div>
+          <div class="field">
+            <label for="p-metrics">Results / Metrics</label>
+            <input id="p-metrics" class="input" required placeholder="120K views • 4.2% CTR" />
+          </div>
+          <button type="submit" class="btn btn-primary">Save to Database</button>
+        </form>
+
+        <div class="card">
+          <h2 style="font-size:1.25rem">Database Inspector</h2>
+          <p style="font-size:13px">Live JSON snapshot of all stored collections (`orders`, `inquiries`, `briefs`, `portfolio`, `users`).</p>
+          <pre id="raw-db-view" style="background:var(--bg-navy);color:#e2e8f0;padding:16px;border-radius:10px;font-size:12px;overflow:auto;max-height:280px"></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module">
+    import { renderShell, showToast } from "./components.js";
+    import { getAdminSession, logoutAll } from "./auth.js";
+    import { isFirebaseConfigured } from "./firebase-config.js";
+    import { listRecords, updateRecord, deleteRecord, createRecord } from "./db.js";
+
+    renderShell("admin.html");
+
+    const session = getAdminSession();
+    if (!session) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("db-mode-status").textContent = isFirebaseConfigured
+      ? "Connected to Cloud Firestore (Production Mode)"
+      : "Running in Local Preview Database Mode (paste Firebase keys in assets/js/firebase-config.js for live Cloud Firestore)";
+
+    let snapshot = {};
+
+    async function loadAll() {
+      const [orders, inquiries, briefs, portfolio, users] = await Promise.all([
+        listRecords("orders"),
+        listRecords("inquiries"),
+        listRecords("briefs"),
+        listRecords("portfolio"),
+        listRecords("users"),
+      ]);
+      snapshot = { orders, inquiries, briefs, portfolio, users };
+
+      document.getElementById("stat-orders").textContent = orders.length;
+      document.getElementById("stat-inquiries").textContent = inquiries.length;
+      document.getElementById("stat-briefs").textContent = briefs.length;
+      document.getElementById("stat-portfolio").textContent = portfolio.length;
+
+      document.getElementById("orders-tbody").innerHTML = orders.length
+        ? orders
+            .map(
+              (o) => `<tr>
+                <td><strong>${o.brandName || "—"}</strong></td>
+                <td>${o.userEmail || "—"}</td>
+                <td>${o.planId === "monthly_800" ? "$800/mo" : "$100/wk"}</td>
+                <td><code>${o.paypalTxId || "—"}</code></td>
+                <td><span class="badge ${o.status === "active" ? "badge-green" : "badge-amber"}">${o.status}</span></td>
+                <td>
+                  ${
+                    o.status !== "active"
+                      ? `<button class="btn btn-primary btn-sm" data-activate-order="${o.id}">Activate</button>`
+                      : `<span style="font-size:12px;color:var(--success)">Verified</span>`
+                  }
+                </td>
+              </tr>`
+            )
+            .join("")
+        : `<tr><td colspan="6" style="color:var(--ink-muted)">No orders recorded yet.</td></tr>`;
+
+      document.getElementById("inquiries-tbody").innerHTML = inquiries.length
+        ? inquiries
+            .map(
+              (i) => `<tr>
+                <td><strong>${i.name || "—"}</strong></td>
+                <td><a href="mailto:${i.email}" style="color:var(--blue-600)">${i.email}</a></td>
+                <td>${i.service || "—"}</td>
+                <td>${i.message || "—"}</td>
+                <td><button class="btn btn-secondary btn-sm" data-delete-inquiry="${i.id}">Delete</button></td>
+              </tr>`
+            )
+            .join("")
+        : `<tr><td colspan="5" style="color:var(--ink-muted)">No inquiries yet.</td></tr>`;
+
+      document.getElementById("raw-db-view").textContent = JSON.stringify(snapshot, null, 2);
+
+      document.querySelectorAll("[data-activate-order]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await updateRecord("orders", btn.dataset.activateOrder, { status: "active" });
+          showToast("Order activated!");
+          loadAll();
+        });
+      });
+
+      document.querySelectorAll("[data-delete-inquiry]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await deleteRecord("inquiries", btn.dataset.deleteInquiry);
+          showToast("Inquiry removed.");
+          loadAll();
+        });
+      });
+    }
+
+    document.getElementById("portfolio-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await createRecord("portfolio", {
+        type: "short_video",
+        title: document.getElementById("p-title").value.trim(),
+        client: document.getElementById("p-client").value.trim(),
+        metrics: document.getElementById("p-metrics").value.trim(),
+      });
+      showToast("Portfolio item added!");
+      e.target.reset();
+      loadAll();
+    });
+
+    document.getElementById("refresh-btn").addEventListener("click", loadAll);
+    document.getElementById("export-btn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `brandy-db-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("admin-logout-btn").addEventListener("click", async () => {
+      await logoutAll();
+      window.location.href = "login.html";
+    });
+
+    loadAll();
+  </script>
+</body>
+</html>

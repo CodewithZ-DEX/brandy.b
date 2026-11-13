@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In | Brandy Digital Marketing Agency</title>
+  <meta name="description" content="Sign in to Brandy with your Google account, self-made email account, or administrator credentials." />
+  <link rel="canonical" href="https://brandy.netlify.app/login.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="section bg-subtle">
+    <div class="container" style="max-width:520px">
+      <div class="card">
+        <div style="text-align:center;margin-bottom:24px">
+          <span class="eyebrow">Brandy Access</span>
+          <h1 style="font-size:1.75rem;margin-bottom:6px">Sign in to your workspace</h1>
+          <p style="font-size:14px;margin:0">Use Google, create a self-made account, or sign in as Administrator.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
+          <button type="button" class="btn btn-primary btn-sm" id="tab-login">Client Login</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="tab-register">Create Account</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="tab-admin">Admin Login</button>
+        </div>
+
+        <button type="button" id="google-signin-btn" class="btn btn-secondary btn-lg" style="width:100%;margin-bottom:18px">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-8.97z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <!-- Client Email Login -->
+        <form id="login-form" class="form-grid">
+          <div class="field">
+            <label for="l-email">Email Address</label>
+            <input id="l-email" class="input" type="email" required placeholder="you@company.com" />
+          </div>
+          <div class="field">
+            <label for="l-pass">Password</label>
+            <input id="l-pass" class="input" type="password" required placeholder="••••••••" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+        </form>
+
+        <!-- Self-Made Account Registration -->
+        <form id="register-form" class="form-grid" style="display:none">
+          <div class="field">
+            <label for="r-name">Full Name</label>
+            <input id="r-name" class="input" required placeholder="Pawan Kumar" />
+          </div>
+          <div class="field">
+            <label for="r-email">Email Address</label>
+            <input id="r-email" class="input" type="email" required placeholder="you@company.com" />
+          </div>
+          <div class="field">
+            <label for="r-pass">Create Password</label>
+            <input id="r-pass" class="input" type="password" minlength="6" required placeholder="Minimum 6 characters" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">Create Self-Made Account</button>
+        </form>
+
+        <!-- Administrator Login -->
+        <form id="admin-form" class="form-grid" style="display:none">
+          <div class="field">
+            <label for="a-user">Administrator Username or Email</label>
+            <input id="a-user" class="input" required placeholder="admin or creativepawan89@gmail.com" />
+          </div>
+          <div class="field">
+            <label for="a-pass">Administrator Password</label>
+            <input id="a-pass" class="input" type="password" required placeholder="Enter admin password" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">Sign In to Admin Console</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module">
+    import { renderShell, showToast } from "./components.js";
+    import { loginWithGoogle, loginWithEmail, registerWithEmail, loginAsAdmin } from "./auth.js";
+
+    renderShell("login.html");
+
+    const forms = {
+      login: document.getElementById("login-form"),
+      register: document.getElementById("register-form"),
+      admin: document.getElementById("admin-form"),
+    };
+    const tabs = {
+      login: document.getElementById("tab-login"),
+      register: document.getElementById("tab-register"),
+      admin: document.getElementById("tab-admin"),
+    };
+
+    function switchTab(active) {
+      Object.keys(forms).forEach((k) => {
+        forms[k].style.display = k === active ? "grid" : "none";
+        tabs[k].className = k === active ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm";
+      });
+    }
+
+    tabs.login.addEventListener("click", () => switchTab("login"));
+    tabs.register.addEventListener("click", () => switchTab("register"));
+    tabs.admin.addEventListener("click", () => switchTab("admin"));
+
+    document.getElementById("google-signin-btn").addEventListener("click", async () => {
+      try {
+        await loginWithGoogle();
+        showToast("Signed in with Google!");
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        showToast("Google sign-in failed: " + err.message);
+      }
+    });
+
+    forms.login.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await loginWithEmail(document.getElementById("l-email").value.trim(), document.getElementById("l-pass").value);
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+
+    forms.register.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await registerWithEmail(
+          document.getElementById("r-name").value.trim(),
+          document.getElementById("r-email").value.trim(),
+          document.getElementById("r-pass").value
+        );
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+
+    forms.admin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await loginAsAdmin(document.getElementById("a-user").value.trim(), document.getElementById("a-pass").value);
+        window.location.href = "admin.html";
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

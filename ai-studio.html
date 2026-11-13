@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini AI Strategy Studio | Brandy Digital Agency</title>
+  <meta name="description" content="Generate custom 14-day social campaigns, short-form video hooks, blog &amp; case study plans, and landing page CRO audits powered by Google Gemini API." />
+  <link rel="canonical" href="https://brandy.netlify.app/ai-studio.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main>
+    <section class="section-sm bg-subtle" style="border-bottom:1px solid var(--border)">
+      <div class="container">
+        <span class="eyebrow">Powered by Google Gemini API</span>
+        <h1>Brandy AI Strategy Studio</h1>
+        <p class="lead">Generate an executive-ready social campaign, editorial roadmap, or landing page CRO audit for your brand using Gemini 3.8 Flash.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container grid-2" style="align-items:start;gap:32px">
+        <form id="ai-form" class="card form-grid">
+          <h2 style="font-size:1.35rem;margin-bottom:4px">Configure Your Brand Brief</h2>
+          <div class="field">
+            <label for="ai-mode">Strategy Mode</label>
+            <select id="ai-mode" class="select">
+              <option value="social">Social Media &amp; Short-Form Video Campaign</option>
+              <option value="content">Blogs, Buyer Guides &amp; Case Studies</option>
+              <option value="cro">Website Design &amp; CRO Blueprint</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ai-brand">Brand / Account Name</label>
+            <input id="ai-brand" class="input" required placeholder="e.g. NovaPay or @fitwithkiran" />
+          </div>
+          <div class="field">
+            <label for="ai-industry">Industry / Niche</label>
+            <input id="ai-industry" class="input" required placeholder="e.g. B2B Fintech, Skincare, Fitness Creator" />
+          </div>
+          <div class="field">
+            <label for="ai-audience">Target Audience</label>
+            <input id="ai-audience" class="input" required placeholder="e.g. Startup founders, US ecommerce buyers" />
+          </div>
+          <div class="field">
+            <label for="ai-goal">Primary Conversion Goal</label>
+            <input id="ai-goal" class="input" required placeholder="e.g. Book 30 qualified demo calls / month" />
+          </div>
+          <div class="field">
+            <label for="ai-notes">Additional Context (Optional)</label>
+            <textarea id="ai-notes" class="textarea" placeholder="Current website URL, social handles, or key differentiators..."></textarea>
+          </div>
+          <button type="submit" id="ai-submit-btn" class="btn btn-primary btn-lg">Generate with Gemini AI</button>
+        </form>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h2 style="font-size:1.35rem;margin:0">Generated Strategy</h2>
+            <span id="ai-model-badge" class="badge badge-blue">gemini-3.8-flash</span>
+          </div>
+          <div id="ai-output" class="ai-output">Fill out your brand brief on the left and click "Generate with Gemini AI" to receive a tailored campaign plan.</div>
+          <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+            <button id="ai-copy-btn" class="btn btn-secondary btn-sm" type="button">Copy Output</button>
+            <a href="pricing.html" class="btn btn-primary btn-sm">Execute This Plan ($100/wk)</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module">
+    import { renderShell, showToast } from "./components.js";
+    import { createRecord } from "./db.js";
+    import { subscribeAuth } from "./auth.js";
+
+    renderShell("ai-studio.html");
+    let currentUser = null;
+    subscribeAuth((u) => (currentUser = u));
+
+    const form = document.getElementById("ai-form");
+    const outputEl = document.getElementById("ai-output");
+    const submitBtn = document.getElementById("ai-submit-btn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Generating via Gemini...";
+      outputEl.textContent = "Analyzing brand positioning and generating your tailored blueprint...";
+
+      const payload = {
+        mode: document.getElementById("ai-mode").value,
+        brandName: document.getElementById("ai-brand").value.trim(),
+        industry: document.getElementById("ai-industry").value.trim(),
+        audience: document.getElementById("ai-audience").value.trim(),
+        goal: document.getElementById("ai-goal").value.trim(),
+        notes: document.getElementById("ai-notes").value.trim(),
+      };
+
+      try {
+        const res = await fetch("/api/gemini-strategy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Gemini request failed");
+        }
+        outputEl.textContent = data.output;
+        await createRecord("ai_generations", {
+          userId: currentUser?.uid || "guest",
+          prompt: `${payload.mode} | ${payload.brandName} (${payload.industry})`,
+          output: data.output,
+        });
+        showToast("Strategy generated & saved!");
+      } catch (err) {
+        outputEl.textContent =
+          `Note: Live Gemini API call requires deploying to Netlify with GEMINI_API_KEY set.\n\n` +
+          `Error: ${err.message}\n\n` +
+          `--- Preview Blueprint for ${payload.brandName} ---\n` +
+          `1. Core Pillars: Authority Proof, Behind-the-Scenes Process, Conversion Case Studies\n` +
+          `2. Short-Form Hooks: "Stop losing ${payload.audience} on day 1" • "How ${payload.brandName} solves ${payload.industry} bottlenecks in 48h"\n` +
+          `3. CRO Action: Add above-the-fold outcome headline + PayPal QR / instant booking CTA.`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate with Gemini AI";
+      }
+    });
+
+    document.getElementById("ai-copy-btn").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(outputEl.textContent);
+      showToast("Strategy copied to clipboard");
+    });
+  </script>
+</body>
+</html>
